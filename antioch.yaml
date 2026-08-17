@@ -1,0 +1,29 @@
+# The id is the immutable identity used by Antioch machines.
+id: "my-sim-30e428c62204407aa578dcc7c76206ba"
+name: "my-sim"
+scenario_paths: ["factory_sre/scenarios.py"]
+
+services:
+  sim:
+    image: "antioch-engine/isaac-sim-6.0.1"
+    watch:
+      - action: sync
+        path: .
+        target: /workspace/project
+    # ports are reachable at localhost:<published> while the services are up
+    #   - name: viewer
+    #     target: 8080
+    #     published: 8080
+    # declared ports stay open after `antioch services up` returns
+    # `antioch services down` closes them
+
+# Each suite is the ordered union of its select clauses.
+suites:
+  smoke:
+    description: "Fast engine smoke checks"
+    select:
+      - tags: ["smoke"]
+  sweep:
+    description: "Every case of the parameter sweep"
+    select:
+      - tags: ["sweep"]
