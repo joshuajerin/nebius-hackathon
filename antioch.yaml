@@ -1,0 +1,72 @@
+# The id is the immutable identity used by Antioch machines.
+id: "hackathon-nebius-c814288aa8ed4292bd72d1247dc34d73"
+name: "hackathon-nebius"
+scenario_paths: ["factory_sre/scenarios.py", "factory_sre/integrated_scenarios.py", "factory_sre/industrial_cells_scenarios.py", "factory_sre/warehouse_mission_scenarios.py", "factory_sre/simple_boxes_fpv_scenarios.py"]
+
+services:
+  sim:
+    build:
+      context: .
+      dockerfile: docker/sim.Dockerfile
+    depends_on:
+      diagnostic-target:
+        condition: service_healthy
+    command: ["python", "-m", "factory_sre.live.sim_server"]
+    working_dir: /workspace/project
+    environment:
+      FACTORY_SRE_CONTROL_URL: "http://127.0.0.1:8765"
+      FACTORY_SRE_FRAME_PATH: "/workspace/output/live/latest.jpg"
+      FACTORY_SRE_SO101_USD: "/workspace/project/assets/vendor/so101_antioch_v1.3.0.usdc"
+      FACTORY_SRE_LIVE_SIM_ENABLED: "0"
+    healthcheck:
+      test: ["CMD", "python", "-m", "factory_sre.live.sim_healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 90s
+    watch:
+      - action: sync+restart
+        path: .
+        target: /workspace/project
+
+  diagnostic-target:
+    build:
+      context: .
+      dockerfile: docker/target.Dockerfile
+    command: ["python", "-m", "factory_sre.target.server"]
+    working_dir: /workspace/project
+    environment:
+      FACTORY_SRE_CONTROL_HOST: "127.0.0.1"
+      FACTORY_SRE_CONTROL_PORT: "8765"
+      FACTORY_SRE_DIAGNOSTIC_HOST: "127.0.0.1"
+      FACTORY_SRE_DIAGNOSTIC_PORT: "8766"
+      FACTORY_SRE_LEDGER: "/workspace/output/diagnostic-target.sqlite3"
+      FACTORY_SRE_FRAME_PATH: "/workspace/output/live/latest.jpg"
+      FACTORY_SRE_CONTACT_HOLD_SECONDS: "5"
+    ports: ["8765"]
+    healthcheck:
+      test: ["CMD", "python", "-m", "factory_sre.target.healthcheck"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
+    privileged: false
+    watch:
+      - action: sync+restart
+        path: factory_sre
+        target: /workspace/project/factory_sre
+
+# Each suite is the ordered union of its select clauses.
+suites:
+  smoke:
+    description: "Exact asset and API compatibility gate"
+    select:
+      - tags: ["smoke"]
+  hero:
+    description: "End-to-end fault recovery missions"
+    select:
+      - tags: ["hero"]
+  certification:
+    description: "Held-out identity, docking, safety, and recovery cases"
+    select:
+      - tags: ["certification"]

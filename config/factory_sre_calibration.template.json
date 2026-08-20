@@ -1,0 +1,22 @@
+{
+  "calibrated": false,
+  "notes": "Approved two-workbench template. Do not set calibrated=true until the measured mount, wrist camera, magnetic tool and 300 mm tag-to-dock transform are independently verified.",
+  "wrist_camera_intrinsics": {
+    "fx": 1.0,
+    "fy": 1.0,
+    "cx": 0.0,
+    "cy": 0.0
+  },
+  "body_to_arm_mount": {
+    "translation_m": [0.0, 0.0, 0.125],
+    "quaternion_wxyz": [1.0, 0.0, 0.0, 0.0]
+  },
+  "wrist_camera_to_usb_tip": {
+    "translation_m": [0.0, 0.0, 0.0],
+    "quaternion_wxyz": [1.0, 0.0, 0.0, 0.0]
+  },
+  "fine_tag_to_usb_port": {
+    "translation_m": [-0.30, 0.0, 0.0],
+    "quaternion_wxyz": [1.0, 0.0, 0.0, 0.0]
+  }
+}

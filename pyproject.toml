@@ -1,0 +1,28 @@
+[project]
+name = "hackathon-nebius"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "antioch-sim==0.3.63",
+    "numpy>=2.0,<3",
+    "pillow>=10,<12",
+    "pupil-apriltags==1.0.4.post11",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-cov>=5,<7",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers"
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: process and socket integration tests",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
