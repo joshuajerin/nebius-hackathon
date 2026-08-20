@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Factory SRE Control</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080b0d;
+      --panel: #101519;
+      --panel-2: #151c21;
+      --line: #283139;
+      --text: #eef3f5;
+      --muted: #8f9ba3;
+      --green: #56d68b;
+      --green-dim: #173b28;
+      --red: #ff6b64;
+      --red-dim: #3d1d1d;
+      --cyan: #49c7e6;
+      --amber: #e7b85a;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.45 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button { font: inherit; }
+    .shell { max-width: 1540px; margin: 0 auto; padding: 22px; }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .mark {
+      width: 34px; height: 34px; border-radius: 9px;
+      display: grid; place-items: center;
+      color: #071014; background: var(--cyan); font-weight: 900;
+    }
+    h1 { font-size: 18px; margin: 0; letter-spacing: -.01em; }
+    .subtitle { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .connection { display: flex; align-items: center; gap: 9px; color: var(--muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 4px #e7b85a1a; }
+    .dot.live { background: var(--green); box-shadow: 0 0 0 4px #56d68b1a; }
+    .toolbar { display: flex; align-items: center; gap: 8px; }
+    .btn {
+      border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px;
+      color: var(--text); background: var(--panel); cursor: pointer;
+    }
+    .btn:hover { border-color: #43515b; background: #161d22; }
+    .btn.danger { color: #ffc3bf; border-color: #71322f; background: #281414; }
+    .btn:disabled { opacity: .42; cursor: default; }
+    .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .metric { border: 1px solid var(--line); border-radius: 11px; background: var(--panel); padding: 13px 15px; }
+    .metric-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    .metric-value { font-size: 22px; font-weight: 680; margin-top: 4px; }
+    .main { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(340px, .85fr); gap: 10px; }
+    .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); overflow: hidden; }
+    .panel-head { min-height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line); }
+    .panel-title { font-weight: 650; }
+    .panel-meta { color: var(--muted); font-size: 12px; }
+    .camera { position: relative; aspect-ratio: 16 / 8.7; background: #090d10; overflow: hidden; }
+    .camera img { width: 100%; height: 100%; object-fit: cover; display: block; visibility: hidden; }
+    .camera img.ready { visibility: visible; }
+    .camera-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
+    .camera-overlay {
+      position: absolute; left: 14px; bottom: 14px; display: flex; gap: 8px;
+      pointer-events: none;
+    }
+    .pill { border: 1px solid #ffffff1c; background: #090d10d9; border-radius: 8px; padding: 7px 10px; backdrop-filter: blur(6px); }
+    .pill strong { display: block; font-size: 12px; }
+    .pill span { color: #b7c0c5; font-size: 11px; }
+    .side { display: grid; grid-template-rows: auto auto 1fr; gap: 10px; }
+    .robot { padding: 16px; }
+    .phase-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .phase { font-size: 20px; font-weight: 680; text-transform: capitalize; }
+    .state-badge { padding: 5px 8px; border-radius: 999px; color: var(--cyan); background: #12323a; font-size: 11px; }
+    .detail { color: var(--muted); margin-top: 6px; min-height: 40px; }
+    .progress { height: 6px; border-radius: 999px; overflow: hidden; background: #232c32; margin-top: 14px; }
+    .progress > div { height: 100%; width: 0; background: var(--cyan); transition: width .25s linear; }
+    .progress-note { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 5px; }
+    .queue { padding: 12px 16px 15px; }
+    .queue-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 28px; }
+    .queue-item { border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; background: var(--panel-2); font-size: 12px; }
+    .queue-arrow { color: #59666f; }
+    .event-list { max-height: 320px; overflow: auto; }
+    .event { display: grid; grid-template-columns: 9px 1fr auto; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #20272c; }
+    .event:last-child { border-bottom: 0; }
+    .event-mark { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: #65737c; }
+    .event.failure .event-mark { background: var(--red); }
+    .event.recovery .event-mark { background: var(--green); }
+    .event.contact .event-mark { background: var(--cyan); }
+    .event-text { font-size: 12px; }
+    .event-time { color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .lower { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(360px, .65fr); gap: 10px; margin-top: 10px; }
+    .stations { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 12px; }
+    .station { border: 1px solid var(--line); border-radius: 11px; padding: 12px; background: var(--panel-2); transition: border-color .2s, background .2s; }
+    .station.offline { border-color: #743431; background: var(--red-dim); }
+    .station.active { outline: 1px solid var(--cyan); outline-offset: -1px; }
+    .station-top { display: flex; justify-content: space-between; align-items: start; }
+    .station-name { font-weight: 680; }
+    .station-tag { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .station-status { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); }
+    .station.offline .station-status { color: var(--red); }
+    .station button { width: 100%; margin-top: 13px; }
+    .map { position: relative; margin: 12px; height: 286px; border: 1px solid var(--line); border-radius: 11px; background: #0b1013; overflow: hidden; }
+    .map::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(#28313940 1px, transparent 1px), linear-gradient(90deg, #28313940 1px, transparent 1px); background-size: 28px 28px; }
+    .aisle { position: absolute; left: 4%; right: 4%; top: 39%; height: 22%; border-top: 1px dashed #3d4b54; border-bottom: 1px dashed #3d4b54; color: #58656d; display: grid; place-items: center; font-size: 10px; letter-spacing: .14em; }
+    .map-station { position: absolute; width: 11%; height: 24%; transform: translate(-50%, -50%); border: 1px solid #3b4850; border-radius: 5px; display: grid; place-items: center; background: #172128; color: #9ca9b0; font-size: 11px; }
+    .map-station.offline { border-color: var(--red); color: #ffd0cd; background: #431f1e; }
+    .robot-dot { position: absolute; z-index: 3; width: 19px; height: 19px; transform: translate(-50%, -50%); border: 3px solid #061014; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 0 2px #49c7e680; transition: left .35s linear, top .35s linear; }
+    .robot-dot::after { content: ""; position: absolute; left: 7px; top: -7px; width: 2px; height: 8px; background: var(--cyan); transform-origin: 1px 15px; transform: rotate(var(--yaw)); }
+    @media (max-width: 1040px) {
+      .main, .lower { grid-template-columns: 1fr; }
+      .side { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+      .side .panel:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 14px; }
+      header { align-items: flex-start; flex-direction: column; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .stations { grid-template-columns: repeat(2, 1fr); }
+      .side { grid-template-columns: 1fr; }
+      .side .panel:last-child { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="mark">FS</div>
+        <div><h1>Factory SRE Control</h1><div class="subtitle">Autonomous physical recovery · Antioch / Isaac Sim</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="connection"><span id="connectionDot" class="dot"></span><span id="connectionText">Connecting</span></div>
+        <button class="btn" id="demoButton">Inject 3 failures</button>
+        <button class="btn danger" id="resetButton">Reset incidents</button>
+      </div>
+    </header>
+
+    <section class="metrics">
+      <div class="metric"><div class="metric-label">Online</div><div class="metric-value" id="onlineMetric">—</div></div>
+      <div class="metric"><div class="metric-label">Active failures</div><div class="metric-value" id="offlineMetric">—</div></div>
+      <div class="metric"><div class="metric-label">Recovered</div><div class="metric-value" id="recoveryMetric">—</div></div>
+      <div class="metric"><div class="metric-label">Robot heartbeat</div><div class="metric-value" id="heartbeatMetric">—</div></div>
+    </section>
+
+    <section class="main">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Live Antioch simulation</div><div class="panel-meta">Persistent GPU process</div></div>
+        <div class="camera">
+          <div class="camera-empty" id="cameraEmpty">Waiting for the simulator’s first frame…</div>
+          <img id="simFrame" alt="Live Factory SRE simulator frame">
+          <div class="camera-overlay">
+            <div class="pill"><strong id="overlayPhase">RESTING</strong><span>Robot state</span></div>
+            <div class="pill"><strong id="overlayTarget">No target</strong><span>Current mission</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="panel robot">
+          <div class="phase-row"><div class="phase" id="robotPhase">Resting</div><div class="state-badge" id="robotBadge">SIM OFFLINE</div></div>
+          <div class="detail" id="robotDetail">Waiting for the persistent simulator.</div>
+          <div class="progress"><div id="contactBar"></div></div>
+          <div class="progress-note"><span id="contactLabel">No magnetic contact</span><span id="contactTime">0.0 / 5.0 s</span></div>
+        </div>
+        <div class="panel queue">
+          <div class="panel-title" style="margin-bottom:9px">Planned repair route</div>
+          <div class="queue-list" id="queueList"><span class="panel-meta">Queue empty</span></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Incident timeline</div><div class="panel-meta" id="eventCount">0 events</div></div>
+          <div class="event-list" id="eventList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lower">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Workstations</div><div class="panel-meta">Click any healthy station to fail it</div></div>
+        <div class="stations" id="stationGrid"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Fleet map</div><div class="panel-meta">2 × 4 service grid</div></div>
+        <div class="map" id="fleetMap"><div class="aisle">FACTORY AISLE</div><div class="robot-dot" id="robotDot"></div></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let lastState = null;
+    let frameTimer = null;
+
+    async function api(path, method = 'GET', body = null) {
+      const response = await fetch(path, {
+        method,
+        headers: {'Content-Type': 'application/json'},
+        body: body === null ? null : JSON.stringify(body),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || `HTTP ${response.status}`);
+      return payload;
+    }
+
+    function shortAsset(asset) { return asset ? `Box ${asset.split('-').pop()}` : 'No target'; }
+    function ago(seconds) {
+      if (seconds === null || seconds === undefined) return '—';
+      if (seconds < 1) return 'LIVE';
+      return `${Math.floor(seconds)}s`;
+    }
+    function eventTime(timestamp) { return new Date(timestamp * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}); }
+    function mapPosition(x, y) {
+      return {left: `${6 + ((x + .55) / 5.9) * 88}%`, top: `${92 - (y / 3.2) * 84}%`};
+    }
+
+    function render(state) {
+      lastState = state;
+      const {summary, robot, workstations, events} = state;
+      const connected = robot.simulator_ready && robot.heartbeat_age_seconds !== null && robot.heartbeat_age_seconds < 3;
+      $('connectionDot').className = `dot${connected ? ' live' : ''}`;
+      $('connectionText').textContent = connected ? 'Simulator connected' : 'Dashboard connected · sim waiting';
+      $('onlineMetric').textContent = `${summary.online} / 8`;
+      $('offlineMetric').textContent = summary.offline;
+      $('recoveryMetric').textContent = summary.recoveries;
+      $('heartbeatMetric').textContent = ago(robot.heartbeat_age_seconds);
+      $('robotPhase').textContent = robot.phase.replaceAll('_', ' ');
+      $('overlayPhase').textContent = robot.phase.toUpperCase().replaceAll('_', ' ');
+      $('overlayTarget').textContent = shortAsset(robot.current_target);
+      $('robotDetail').textContent = robot.detail;
+      $('robotBadge').textContent = connected ? 'SIM LIVE' : 'SIM WAITING';
+      const progress = Math.min(100, (robot.contact_seconds / state.contact_hold_seconds) * 100);
+      $('contactBar').style.width = `${progress}%`;
+      $('contactLabel').textContent = robot.contact_asset ? `${shortAsset(robot.contact_asset)} magnetic lock` : 'No magnetic contact';
+      $('contactTime').textContent = `${robot.contact_seconds.toFixed(1)} / ${state.contact_hold_seconds.toFixed(1)} s`;
+
+      const queue = robot.planned_queue.length ? robot.planned_queue : state.pending_failures;
+      $('queueList').innerHTML = queue.length
+        ? queue.map((asset, index) => `${index ? '<span class="queue-arrow">→</span>' : ''}<span class="queue-item">${shortAsset(asset)}</span>`).join('')
+        : '<span class="panel-meta">Queue empty · robot returns to rest</span>';
+
+      $('stationGrid').innerHTML = workstations.map(station => `
+        <article class="station ${station.status} ${robot.current_target === station.asset_id ? 'active' : ''}">
+          <div class="station-top"><div><div class="station-name">Box ${station.box_number}</div><div class="station-tag">AprilTag ${station.tag_id}</div></div><div class="station-status">${station.status}</div></div>
+          <button class="btn ${station.status === 'online' ? 'danger' : ''}" data-fail="${station.asset_id}" ${station.status === 'offline' ? 'disabled' : ''}>${station.status === 'online' ? 'Take offline' : robot.current_target === station.asset_id ? 'Robot dispatched' : 'Queued for repair'}</button>
+        </article>`).join('');
+      document.querySelectorAll('[data-fail]').forEach(button => button.addEventListener('click', () => failStation(button.dataset.fail)));
+
+      const map = $('fleetMap');
+      map.querySelectorAll('.map-station').forEach(node => node.remove());
+      workstations.forEach(station => {
+        const node = document.createElement('div');
+        const pos = mapPosition(station.center[0], station.center[1]);
+        node.className = `map-station ${station.status}`;
+        node.style.left = pos.left; node.style.top = pos.top;
+        node.textContent = station.box_number;
+        map.appendChild(node);
+      });
+      const robotPos = mapPosition(robot.position[0], robot.position[1]);
+      $('robotDot').style.left = robotPos.left; $('robotDot').style.top = robotPos.top;
+      $('robotDot').style.setProperty('--yaw', `${robot.yaw}rad`);
+
+      $('eventCount').textContent = `${events.length} events`;
+      $('eventList').innerHTML = events.slice(0, 18).map(event => `
+        <div class="event ${event.kind}"><span class="event-mark"></span><span class="event-text">${event.message}</span><time class="event-time">${eventTime(event.timestamp)}</time></div>`).join('');
+    }
+
+    async function failStation(asset) {
+      try { render(await api(`/v1/workstations/${asset}/fail`, 'POST', {})); }
+      catch (error) { console.error(error); }
+    }
+    async function refresh() {
+      try { render(await api('/v1/fleet')); }
+      catch (error) {
+        $('connectionDot').className = 'dot';
+        $('connectionText').textContent = 'Control service unavailable';
+      }
+    }
+    $('demoButton').addEventListener('click', async () => {
+      for (const asset of ['service-box-2', 'service-box-5', 'service-box-7']) await failStation(asset);
+    });
+    $('resetButton').addEventListener('click', async () => render(await api('/v1/fleet/reset', 'POST', {})));
+    $('simFrame').addEventListener('load', () => {
+      $('simFrame').classList.add('ready');
+      $('cameraEmpty').style.display = 'none';
+    });
+    $('simFrame').addEventListener('error', () => {
+      $('simFrame').classList.remove('ready');
+      $('cameraEmpty').style.display = 'grid';
+    });
+    function refreshFrame() {
+      if (!lastState?.robot?.simulator_ready) return;
+      $('simFrame').src = `/v1/sim/frame.jpg?t=${Date.now()}`;
+    }
+    setInterval(refresh, 500);
+    frameTimer = setInterval(refreshFrame, 900);
+    refresh(); refreshFrame();
+  </script>
+</body>
+</html>
