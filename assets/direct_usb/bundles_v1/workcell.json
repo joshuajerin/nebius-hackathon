@@ -1,0 +1,35 @@
+{
+  "name": "factory-sre/workcell",
+  "version": "0.1.0",
+  "runtime": "isaac-sim-6.0.1",
+  "physics_engine": "physx",
+  "loader": "factory_sre.sim.asset_bundles_v1:load_bundle",
+  "bundle_id": "workcell",
+  "default_prim_path": "/World/Workcell",
+  "components": {
+    "ur5e": "/Isaac/Robots/UniversalRobots/ur5e/ur5e.usd",
+    "inspector83x": "/Isaac/Sensors/SICK/Inspector83x/SICK_Inspector83x.usd",
+    "workbench": "prototype-authored",
+    "diagnostic_panel": "prototype-authored",
+    "coarse_apriltag": {
+      "family": "tag36h11",
+      "id": 10,
+      "size_m": 0.15
+    },
+    "fine_apriltag": {
+      "family": "tag36h11",
+      "id": 20,
+      "size_m": 0.04
+    },
+    "fine_tag_to_usb_port_m": [-0.06, 0.0, 0.0]
+  },
+  "stock_acquisition": "reference_from_isaac_asset_root",
+  "repackage_stock_files": false,
+  "deployment_ready": false,
+  "physical_gates": [
+    "measured workbench and panel CAD",
+    "calibrated fine-tag-to-port transform",
+    "measured USB-C bezel and device endpoint geometry"
+  ]
+}
+
