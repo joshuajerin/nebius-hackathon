@@ -1,0 +1,119 @@
+#usda 1.0
+(
+    defaultPrim = "CircularServiceEffector"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "CircularServiceEffector" (
+    kind = "component"
+)
+{
+    custom string factorySre:assetRole = "circular_service_effector"
+    custom string factorySre:sourceRevision = "prototype-v1"
+    custom float factorySre:contactRadiusM = 0.052
+    custom float3 factorySre:contactNormal = (1, 0, 0)
+
+    def Scope "Looks"
+    {
+        def Material "Housing"
+        {
+            token outputs:surface.connect = </CircularServiceEffector/Looks/Housing/Preview.outputs:surface>
+
+            def Shader "Preview"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.055, 0.075, 0.095)
+                float inputs:metallic = 0.65
+                float inputs:roughness = 0.24
+                token outputs:surface
+            }
+        }
+
+        def Material "Contact"
+        {
+            token outputs:surface.connect = </CircularServiceEffector/Looks/Contact/Preview.outputs:surface>
+
+            def Shader "Preview"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.03, 0.42, 0.78)
+                color3f inputs:emissiveColor = (0.0, 0.035, 0.10)
+                float inputs:metallic = 0.35
+                float inputs:roughness = 0.32
+                token outputs:surface
+            }
+        }
+
+        def Material "Center"
+        {
+            token outputs:surface.connect = </CircularServiceEffector/Looks/Center/Preview.outputs:surface>
+
+            def Shader "Preview"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0.02, 0.025, 0.03)
+                float inputs:metallic = 0.15
+                float inputs:roughness = 0.42
+                token outputs:surface
+            }
+        }
+    }
+
+    def Cylinder "MountCollar" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        uniform token axis = "X"
+        double height = 0.024
+        double radius = 0.028
+        rel material:binding = </CircularServiceEffector/Looks/Housing>
+        bool physics:collisionEnabled = 1
+        double3 xformOp:translate = (-0.012, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Cylinder "ToolBody" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        uniform token axis = "X"
+        double height = 0.050
+        double radius = 0.055
+        rel material:binding = </CircularServiceEffector/Looks/Housing>
+        bool physics:collisionEnabled = 1
+        double3 xformOp:translate = (0.025, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Cylinder "ContactFace" (
+        prepend apiSchemas = ["PhysicsCollisionAPI"]
+    )
+    {
+        uniform token axis = "X"
+        double height = 0.006
+        double radius = 0.052
+        rel material:binding = </CircularServiceEffector/Looks/Contact>
+        bool physics:collisionEnabled = 1
+        double3 xformOp:translate = (0.053, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Cylinder "CenterSensor"
+    {
+        uniform token axis = "X"
+        double height = 0.007
+        double radius = 0.012
+        rel material:binding = </CircularServiceEffector/Looks/Center>
+        double3 xformOp:translate = (0.054, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+
+    def Xform "ContactFrame"
+    {
+        custom string factorySre:frameRole = "magnetic_contact"
+        custom float3 factorySre:normal = (1, 0, 0)
+        double3 xformOp:translate = (0.056, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate"]
+    }
+}
